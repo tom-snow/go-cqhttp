@@ -9,5 +9,12 @@ data/
 logs/
 internal/btree/*.lock
 internal/btree/*.db
+
 dumps/
 __debug_bin
+
+# binary builds
+go-cqhttp
+
+# macos
+.DS_Store

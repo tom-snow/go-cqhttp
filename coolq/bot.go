@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"image/png"
 	"os"
 	"regexp"
 	"runtime/debug"
@@ -24,6 +25,9 @@ import (
 	"github.com/Mrs4s/go-cqhttp/db"
 	"github.com/Mrs4s/go-cqhttp/global"
 	"github.com/Mrs4s/go-cqhttp/internal/base"
+	"github.com/Mrs4s/go-cqhttp/internal/mime"
+
+	"golang.org/x/image/webp"
 )
 
 // CQBot CQBot结构体,存储Bot实例相关配置
@@ -153,10 +157,22 @@ func (bot *CQBot) uploadLocalImage(target message.Source, img *LocalImageElement
 		defer func() { _ = f.Close() }()
 		img.Stream = f
 	}
-	if lawful, mime := base.IsLawfulImage(img.Stream); !lawful {
-		return nil, errors.New("image type error: " + mime)
+	mt, ok := mime.CheckImage(img.Stream)
+	if !ok {
+		return nil, errors.New("image type error: " + mt)
 	}
-	// todo: enable multi-thread upload, now got error code 81
+	if mt == "image/webp" && base.ConvertWebpImage {
+		img0, err := webp.Decode(img.Stream)
+		if err != nil {
+			return nil, errors.Wrap(err, "decode webp error")
+		}
+		stream := bytes.NewBuffer(nil)
+		err = png.Encode(stream, img0)
+		if err != nil {
+			return nil, errors.Wrap(err, "encode png error")
+		}
+		img.Stream = bytes.NewReader(stream.Bytes())
+	}
 	i, err := bot.Client.UploadImage(target, img.Stream, 4)
 	if err != nil {
 		return nil, err
@@ -249,7 +265,7 @@ func (bot *CQBot) uploadMedia(target message.Source, elements []message.IMessage
 }
 
 // SendGroupMessage 发送群消息
-func (bot *CQBot) SendGroupMessage(groupID int64, m *message.SendingMessage) int32 {
+func (bot *CQBot) SendGroupMessage(groupID int64, m *message.SendingMessage) (int32, error) {
 	newElem := make([]message.IMessageElement, 0, len(m.Elements))
 	group := bot.Client.FindGroup(groupID)
 	source := message.Source{
@@ -265,14 +281,14 @@ func (bot *CQBot) SendGroupMessage(groupID int64, m *message.SendingMessage) int
 					mem.Poke()
 				}
 			}
-			return 0
+			return 0, nil
 		case *message.MusicShareElement:
 			ret, err := bot.Client.SendGroupMusicShare(groupID, i)
 			if err != nil {
 				log.Warnf("警告: 群 %v 富文本消息发送失败: %v", groupID, err)
-				return -1
+				return -1, errors.Wrap(err, "send group music share error")
 			}
-			return bot.InsertGroupMessage(ret)
+			return bot.InsertGroupMessage(ret), nil
 		case *message.LightAppElement:
 			// token_regex := regexp.MustCompile(`"config": {(.+)?(("ctime": \d)(.+)|("token": ".+?"))(("ctime": \d)(.+)|("token": ".+?"))(.+){0,}?}`)
 			token_regex := regexp.MustCompile(`"config": {(.+)?("token": ".+?")(.+){0,}?}`)
@@ -285,9 +301,9 @@ func (bot *CQBot) SendGroupMessage(groupID int64, m *message.SendingMessage) int
 				ret, err := bot.Client.SendGroupArkSign(groupID, i)
 				if err != nil {
 					log.Warnf("警告: 群 %v JSON 消息签名发送失败: %v", groupID, err)
-					return -1
+					return -1, errors.Wrap(err, "send group ark sign error")
 				}
-				return bot.InsertGroupMessage(ret)
+				return bot.InsertGroupMessage(ret), nil
 			} else {
 				continue
 				// fmt.Println("Already signed!", i.Content)
@@ -301,16 +317,16 @@ func (bot *CQBot) SendGroupMessage(groupID int64, m *message.SendingMessage) int
 	}
 	if len(newElem) == 0 {
 		log.Warnf("群消息发送失败: 消息为空.")
-		return -1
+		return -1, errors.New("empty message")
 	}
 	m.Elements = newElem
 	bot.checkMedia(newElem, groupID)
 	ret := bot.Client.SendGroupMessage(groupID, m)
 	if ret == nil || ret.Id == -1 {
 		log.Warnf("群消息发送失败: 账号可能被风控.")
-		return -1
+		return -1, errors.New("send group message failed: blocked by server")
 	}
-	return bot.InsertGroupMessage(ret)
+	return bot.InsertGroupMessage(ret), nil
 }
 
 // SendPrivateMessage 发送私聊消息
