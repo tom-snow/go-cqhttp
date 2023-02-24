@@ -678,7 +678,7 @@ func (bot *CQBot) CQGroupFileDeleteFile(groupID int64, id string, busID int32) g
 	return OK(nil)
 }
 
-// CQGroupFileMoveFile 拓展API-重命名群文件
+// CQGroupFileRenameFile 拓展API-重命名群文件
 //
 // @route(delete_group_file)
 // @rename(id->file_id, bus_id->"[busid\x2Cbus_id].0")
@@ -699,14 +699,14 @@ func (bot *CQBot) CQGroupFileRenameFile(groupID int64, id string, busID int32, n
 //
 // @route(delete_group_file)
 // @rename(id->file_id, bus_id->"[busid\x2Cbus_id].0")
-func (bot *CQBot) CQGroupFileMoveFile(groupID int64, id string, busID int32, DestFolderId string) global.MSG {
+func (bot *CQBot) CQGroupFileMoveFile(groupID int64, id string, busID int32, destFolderID string) global.MSG {
 	fs, err := bot.Client.GetGroupFileSystem(groupID)
 	if err != nil {
 		log.Warnf("获取群 %v 文件系统信息失败: %v", groupID, err)
 		return Failed(100, "FILE_SYSTEM_API_ERROR", err.Error())
 	}
-	if res := fs.MoveFile("", id, busID, DestFolderId); res != "" {
-		log.Warnf("移动群 %v 文件 %v 到 %v 时出现: %v", groupID, id, DestFolderId, res)
+	if res := fs.MoveFile("", id, busID, destFolderID); res != "" {
+		log.Warnf("移动群 %v 文件 %v 到 %v 时出现: %v", groupID, id, destFolderID, res)
 		return Failed(200, "FILE_SYSTEM_API_ERROR", res)
 	}
 	return OK(nil)

@@ -291,13 +291,13 @@ func (bot *CQBot) SendGroupMessage(groupID int64, m *message.SendingMessage) (in
 			}
 			return bot.InsertGroupMessage(ret), nil
 		case *message.LightAppElement:
-			// token_regex := regexp.MustCompile(`"config": {(.+)?(("ctime": \d)(.+)|("token": ".+?"))(("ctime": \d)(.+)|("token": ".+?"))(.+){0,}?}`)
-			token_regex := regexp.MustCompile(`"config": {(.+)?("token": ".+?")(.+){0,}?}`)
-			if token_regex == nil {
+			// tokenRegex := regexp.MustCompile(`"config": {(.+)?(("ctime": \d)(.+)|("token": ".+?"))(("ctime": \d)(.+)|("token": ".+?"))(.+){0,}?}`)
+			tokenRegex := regexp.MustCompile(`"config": {(.+)?("token": ".+?")(.+){0,}?}`)
+			if tokenRegex == nil {
 				fmt.Println("regexp err")
 				continue
 			}
-			if !token_regex.MatchString(i.Content) {
+			if !tokenRegex.MatchString(i.Content) {
 				log.Warnf("检测到将发往群 %v 的 JSON 消息不包含 token，尝试对其签名并发送(By: tom-snow. Thanks for @oicq). 消息内容: %v", groupID, i.Content)
 				ret, err := bot.Client.SendGroupArkSign(groupID, i)
 				if err != nil {
@@ -305,10 +305,8 @@ func (bot *CQBot) SendGroupMessage(groupID int64, m *message.SendingMessage) (in
 					return -1, errors.Wrap(err, "send group ark sign error")
 				}
 				return bot.InsertGroupMessage(ret), nil
-			} else {
-				continue
-				// fmt.Println("Already signed!", i.Content)
 			}
+			continue
 		case *message.AtElement:
 			if i.Target == 0 && group.SelfPermission() == client.Member {
 				e = message.NewText("@全体成员")
@@ -347,20 +345,18 @@ func (bot *CQBot) SendPrivateMessage(target int64, groupID int64, m *message.Sen
 			bot.Client.SendFriendMusicShare(target, i)
 			return 0
 		case *message.LightAppElement: // TODO: Fix this
-			// token_regex := regexp.MustCompile(`"config": {(.+)?(("ctime": \d)(.+)|("token": ".+?"))(("ctime": \d)(.+)|("token": ".+?"))(.+){0,}?}`)
-			token_regex := regexp.MustCompile(`"config": {(.+)?("token": ".+?")(.+){0,}?}`)
-			if token_regex == nil {
+			// tokenRegex := regexp.MustCompile(`"config": {(.+)?(("ctime": \d)(.+)|("token": ".+?"))(("ctime": \d)(.+)|("token": ".+?"))(.+){0,}?}`)
+			tokenRegex := regexp.MustCompile(`"config": {(.+)?("token": ".+?")(.+){0,}?}`)
+			if tokenRegex == nil {
 				fmt.Println("regexp err")
 				continue
 			}
-			if !token_regex.MatchString(i.Content) {
+			if !tokenRegex.MatchString(i.Content) {
 				log.Warnf("检测到将发往好友 %v 的 JSON 消息不包含 token，尝试对其签名并发送(By: tom-snow. Thanks for @oicq). 消息内容: %v", target, i.Content)
 				bot.Client.SendFriendArkSign(target, i)
 				return 0
-			} else {
-				continue
-				// fmt.Println("Already signed!", i.Content)
 			}
+			continue
 		}
 		newElem = append(newElem, e)
 	}
@@ -457,20 +453,18 @@ func (bot *CQBot) SendGuildChannelMessage(guildID, channelID uint64, m *message.
 			bot.Client.SendGuildMusicShare(guildID, channelID, i)
 			return "-1" // todo: fix this
 		case *message.LightAppElement: // TODO: Fix this
-			// token_regex := regexp.MustCompile(`"config": {(.+)?(("ctime": \d)(.+)|("token": ".+?"))(("ctime": \d)(.+)|("token": ".+?"))(.+){0,}?}`)
-			token_regex := regexp.MustCompile(`"config": {(.+)?("token": ".+?")(.+){0,}?}`)
-			if token_regex == nil {
+			// tokenRegex := regexp.MustCompile(`"config": {(.+)?(("ctime": \d)(.+)|("token": ".+?"))(("ctime": \d)(.+)|("token": ".+?"))(.+){0,}?}`)
+			tokenRegex := regexp.MustCompile(`"config": {(.+)?("token": ".+?")(.+){0,}?}`)
+			if tokenRegex == nil {
 				fmt.Println("regexp err")
 				continue
 			}
-			if !token_regex.MatchString(i.Content) {
+			if !tokenRegex.MatchString(i.Content) {
 				log.Warnf("检测到将发往频道 %v 分区 %v 的 JSON 消息不包含 token，尝试对其签名并发送(By: tom-snow. Thanks for @oicq). 消息内容: %v", guildID, channelID, i.Content)
 				bot.Client.SendGuildArkSign(guildID, channelID, i)
 				return "-1"
-			} else {
-				continue
-				// fmt.Println("Already signed!", i.Content)
 			}
+			continue
 		case *message.VoiceElement, *msg.Poke:
 			log.Warnf("警告: 频道暂不支持发送 %v 消息", i.Type().String())
 			continue
