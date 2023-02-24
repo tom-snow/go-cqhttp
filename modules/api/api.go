@@ -248,11 +248,23 @@ func (c *Caller) call(action string, spec *onebot.Spec, p Getter) global.MSG {
 	case "mark_msg_as_read":
 		p0 := int32(p.Get("message_id").Int())
 		return c.bot.CQMarkMessageAsRead(p0)
+	case "move_group_file":
+		p0 := p.Get("group_id").Int()
+		p1 := p.Get("file_id").String()
+		p2 := int32(p.Get("[busid,bus_id].0").Int())
+		p3 := p.Get("dest_folder_id").String()
+		return c.bot.CQGroupFileMoveFile(p0, p1, p2, p3)
 	case "qidian_get_account_info":
 		return c.bot.CQGetQiDianAccountInfo()
 	case "reload_event_filter":
 		p0 := p.Get("file").String()
 		return c.bot.CQReloadEventFilter(p0)
+	case "rename_group_file":
+		p0 := p.Get("group_id").Int()
+		p1 := p.Get("file_id").String()
+		p2 := int32(p.Get("[busid,bus_id].0").Int())
+		p3 := p.Get("new_file_name").String()
+		return c.bot.CQGroupFileRenameFile(p0, p1, p2, p3)
 	case "send_group_sign":
 		p0 := p.Get("group_id").Int()
 		return c.bot.CQSendGroupSign(p0)

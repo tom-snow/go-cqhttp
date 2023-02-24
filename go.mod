@@ -31,7 +31,7 @@ require (
 
 require (
 	github.com/FloatTech/ttl v0.0.0-20220715042055-15612be72f5b // indirect
-	github.com/RomiChan/protobuf v0.0.0-20220624030127-3310cba9dbc0 // indirect
+	github.com/RomiChan/protobuf v0.1.1-0.20230204044148-2ed269a2e54d // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fumiama/imgsz v0.0.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
@@ -67,6 +67,4 @@ require (
 	modernc.org/token v1.0.1 // indirect
 )
 
-replace github.com/remyoudompheng/bigfft => github.com/fumiama/bigfft v0.0.0-20211011143303-6e0bfa3c836b
-
-replace github.com/Mrs4s/MiraiGo => github.com/tom-snow/MiraiGo v0.0.0-20221218.0.20230107084019-4ced5e9e5c16
+replace github.com/Mrs4s/MiraiGo => github.com/tom-snow/MiraiGo v0.0.0-20230224-arksign

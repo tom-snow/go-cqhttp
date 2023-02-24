@@ -678,6 +678,40 @@ func (bot *CQBot) CQGroupFileDeleteFile(groupID int64, id string, busID int32) g
 	return OK(nil)
 }
 
+// CQGroupFileMoveFile 拓展API-重命名群文件
+//
+// @route(delete_group_file)
+// @rename(id->file_id, bus_id->"[busid\x2Cbus_id].0")
+func (bot *CQBot) CQGroupFileRenameFile(groupID int64, id string, busID int32, newFileName string) global.MSG {
+	fs, err := bot.Client.GetGroupFileSystem(groupID)
+	if err != nil {
+		log.Warnf("获取群 %v 文件系统信息失败: %v", groupID, err)
+		return Failed(100, "FILE_SYSTEM_API_ERROR", err.Error())
+	}
+	if res := fs.RenameFile("", id, busID, newFileName); res != "" {
+		log.Warnf("重命名群 %v 文件 %v 为 %v 时出现: %v", groupID, id, newFileName, res)
+		return Failed(200, "FILE_SYSTEM_API_ERROR", res)
+	}
+	return OK(nil)
+}
+
+// CQGroupFileMoveFile 拓展API-移动群文件
+//
+// @route(delete_group_file)
+// @rename(id->file_id, bus_id->"[busid\x2Cbus_id].0")
+func (bot *CQBot) CQGroupFileMoveFile(groupID int64, id string, busID int32, DestFolderId string) global.MSG {
+	fs, err := bot.Client.GetGroupFileSystem(groupID)
+	if err != nil {
+		log.Warnf("获取群 %v 文件系统信息失败: %v", groupID, err)
+		return Failed(100, "FILE_SYSTEM_API_ERROR", err.Error())
+	}
+	if res := fs.MoveFile("", id, busID, DestFolderId); res != "" {
+		log.Warnf("移动群 %v 文件 %v 到 %v 时出现: %v", groupID, id, DestFolderId, res)
+		return Failed(200, "FILE_SYSTEM_API_ERROR", res)
+	}
+	return OK(nil)
+}
+
 // CQGetWordSlices 隐藏API-获取中文分词
 //
 // https://docs.go-cqhttp.org/api/#%E8%8E%B7%E5%8F%96%E4%B8%AD%E6%96%87%E5%88%86%E8%AF%8D-%E9%9A%90%E8%97%8F-api
