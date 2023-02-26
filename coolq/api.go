@@ -680,7 +680,7 @@ func (bot *CQBot) CQGroupFileDeleteFile(groupID int64, id string, busID int32) g
 
 // CQGroupFileRenameFile 拓展API-重命名群文件
 //
-// @route(delete_group_file)
+// @route(rename_group_file)
 // @rename(id->file_id, bus_id->"[busid\x2Cbus_id].0")
 func (bot *CQBot) CQGroupFileRenameFile(groupID int64, id string, busID int32, newFileName string) global.MSG {
 	fs, err := bot.Client.GetGroupFileSystem(groupID)
@@ -697,7 +697,7 @@ func (bot *CQBot) CQGroupFileRenameFile(groupID int64, id string, busID int32, n
 
 // CQGroupFileMoveFile 拓展API-移动群文件
 //
-// @route(delete_group_file)
+// @route(move_group_file)
 // @rename(id->file_id, bus_id->"[busid\x2Cbus_id].0")
 func (bot *CQBot) CQGroupFileMoveFile(groupID int64, id string, busID int32, destFolderID string) global.MSG {
 	fs, err := bot.Client.GetGroupFileSystem(groupID)
