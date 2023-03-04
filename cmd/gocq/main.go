@@ -41,8 +41,12 @@ var allowStatus = [...]client.UserOnlineStatus{
 	client.StatusGaming, client.StatusVacationing, client.StatusWatchingTV, client.StatusFitness,
 }
 
-// Main 启动主程序
-func Main() {
+// InitBase 解析参数并检测
+//
+//	如果在 windows 下双击打开了程序，程序将在此函数释出脚本后终止；
+//	如果传入 -h 参数，程序将打印帮助后终止；
+//	如果传入 -d 参数，程序将在启动 daemon 后终止。
+func InitBase() {
 	base.Parse()
 	if !base.FastStart && terminal.RunningByDoubleClick() {
 		err := terminal.NoMoreDoubleClick()
@@ -50,7 +54,7 @@ func Main() {
 			log.Errorf("遇到错误: %v", err)
 			time.Sleep(time.Second * 5)
 		}
-		return
+		os.Exit(0)
 	}
 	switch {
 	case base.LittleH:
@@ -65,7 +69,10 @@ func Main() {
 		}
 	}
 	base.Init()
+}
 
+// PrepareData 准备 log, 缓存, 数据库, 必须在 InitBase 之后执行
+func PrepareData() {
 	rotateOptions := []rotatelogs.Option{
 		rotatelogs.WithRotationTime(time.Hour * 24),
 	}
@@ -101,7 +108,10 @@ func Main() {
 	if err := db.Open(); err != nil {
 		log.Fatalf("打开数据库失败: %v", err)
 	}
+}
 
+// LoginInteract 登录交互, 可能需要键盘输入, 必须在 InitBase, PrepareData 之后执行
+func LoginInteract() {
 	var byteKey []byte
 	arg := os.Args
 	if len(arg) > 1 {
@@ -329,7 +339,13 @@ func Main() {
 	servers.Run(coolq.NewQQBot(cli))
 	log.Info("资源初始化完成, 开始处理信息.")
 	log.Info("アトリは、高性能ですから!")
+}
 
+// WaitSignal 在新线程检查更新和网络并等待信号, 必须在 InitBase, PrepareData, LoginInteract 之后执行
+//
+//   - 直接返回: os.Interrupt, syscall.SIGTERM
+//   - dump stack: syscall.SIGQUIT, syscall.SIGUSR1
+func WaitSignal() {
 	go func() {
 		selfupdate.CheckUpdate()
 		selfdiagnosis.NetworkDiagnosis(cli)
