@@ -15,6 +15,10 @@ __debug_bin
 
 # binary builds
 go-cqhttp
+*.exe
 
 # macos
 .DS_Store
+
+# windwos rc
+*.syso
